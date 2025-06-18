@@ -64,12 +64,12 @@ const InvoicePreview = ({ data, onEdit }) => {
                   className="h-16 w-auto"
                 />
               )}
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">INVOICE</h1>
-                {data.company.trn && (
-                  <p className="text-sm text-gray-600">TRN - {data.company.trn}</p>
-                )}
-              </div>
+            </div>
+            <div className="text-right">
+              <h1 className="text-3xl font-normal text-gray-900">INVOICE</h1>
+              {data.company.trn && (
+                <p className="text-sm text-gray-600">TRN - {data.company.trn}</p>
+              )}
             </div>
           </div>
 
