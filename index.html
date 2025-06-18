@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    <script src="lib/jspdf.min.js" defer></script>
+    <script src="lib/html2canvas.min.js" defer></script>
+    <script src="js/app.js" type="module" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Invoice Generator</h1>
+            <div class="actions">
+                <button id="new-invoice" class="btn">New Invoice</button>
+                <button id="save-draft" class="btn">Save Draft</button>
+                <button id="load-draft" class="btn">Load Draft</button>
+                <button id="preview-invoice" class="btn btn-primary">Preview</button>
+                <button id="download-pdf" class="btn btn-success">Download PDF</button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="invoice-form">
+                <section class="company-details">
+                    <h2>Company Information</h2>
+                    <div class="logo-upload">
+                        <div id="logo-preview">
+                            <img id="company-logo" src="assets/default-logo.png" alt="Company Logo">
+                        </div>
+                        <input type="file" id="logo-upload" accept="image/*">
+                        <button id="upload-logo-btn" class="btn">Upload Logo</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company-name">Company Name</label>
+                        <input type="text" id="company-name" placeholder="Your Company Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company-trn">TRN</label>
+                        <input type="text" id="company-trn" placeholder="Tax Registration Number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company-address">Address</label>
+                        <textarea id="company-address" placeholder="Company Address"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="company-phone">Phone</label>
+                            <input type="tel" id="company-phone" placeholder="Phone Number">
+                        </div>
+                        <div class="form-group">
+                            <label for="company-mobile">Mobile</label>
+                            <input type="tel" id="company-mobile" placeholder="Mobile Number">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company-website">Website</label>
+                        <input type="url" id="company-website" placeholder="Company Website">
+                    </div>
+                </section>
+                
+                <section class="client-details">
+                    <h2>Client Information</h2>
+                    <div class="form-group">
+                        <label for="client-name">Client Name</label>
+                        <input type="text" id="client-name" placeholder="Client Company Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-contact">Contact Person</label>
+                        <input type="text" id="client-contact" placeholder="Contact Person Name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-address">Address</label>
+                        <textarea id="client-address" placeholder="Client Address"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="client-phone">Phone</label>
+                            <input type="tel" id="client-phone" placeholder="Client Phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="client-email">Email</label>
+                            <input type="email" id="client-email" placeholder="Client Email">
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="invoice-details">
+                    <h2>Invoice Details</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="invoice-number">Invoice Number</label>
+                            <input type="text" id="invoice-number" placeholder="Invoice #">
+                        </div>
+                        <div class="form-group">
+                            <label for="invoice-date">Invoice Date</label>
+                            <input type="date" id="invoice-date">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="payment-due">Payment Due</label>
+                            <input type="date" id="payment-due">
+                        </div>
+                        <div class="form-group">
+                            <label for="currency">Currency</label>
+                            <select id="currency">
+                                <option value="JMD">JMD (Jamaican Dollar)</option>
+                                <option value="USD">USD (US Dollar)</option>
+                                <option value="EUR">EUR (Euro)</option>
+                                <option value="GBP">GBP (British Pound)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="invoice-items">
+                    <h2>Invoice Items</h2>
+                    <table id="items-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="item-rows">
+                            <!-- Items will be added here dynamically -->
+                        </tbody>
+                    </table>
+                    
+                    <button id="add-item" class="btn">+ Add Item</button>
+                    
+                    <div class="totals-section">
+                        <div class="totals-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">0.00</span>
+                        </div>
+                        <div class="totals-row discount-row">
+                            <div class="discount-input">
+                                <label for="discount">Discount:</label>
+                                <input type="number" id="discount" min="0" value="0">
+                                <select id="discount-type">
+                                    <option value="fixed">Fixed Amount</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                </select>
+                            </div>
+                            <span id="discount-amount">0.00</span>
+                        </div>
+                        <div class="totals-row">
+                            <span>Total:</span>
+                            <span id="total-amount">0.00</span>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="payment-terms">
+                    <h2>Notes / Terms</h2>
+                    <div class="form-group">
+                        <label for="payment-methods">Payment Methods</label>
+                        <textarea id="payment-methods" placeholder="Enter payment methods and terms"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea id="notes" placeholder="Additional notes or terms"></textarea>
+                    </div>
+                </section>
+            </div>
+            
+            <div id="invoice-preview" class="invoice-preview">
+                <div class="preview-wrapper">
+                    <div id="preview-content" class="preview-content">
+                        <!-- Preview will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Generating PDF...</p>
+        </div>
+    </div>
+    
+    <!-- Template for new item row -->
+    <template id="item-row-template">
+        <tr class="item-row">
+            <td>
+                <input type="text" class="item-code" placeholder="Item Code">
+            </td>
+            <td>
+                <input type="text" class="item-description" placeholder="Description">
+            </td>
+            <td>
+                <input type="number" class="item-quantity" min="1" value="1">
+            </td>
+            <td>
+                <input type="number" class="item-price" min="0" step="0.01" value="0.00">
+            </td>
+            <td class="item-amount">0.00</td>
+            <td>
+                <button class="delete-item btn-danger">×</button>
+            </td>
+        </tr>
+    </template>
+</body>
+</html>

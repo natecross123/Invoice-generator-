@@ -1,0 +1,167 @@
+/* Print-specific styles for PDF generation */
+@page {
+    size: A4;
+    margin: 20mm;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    font-size: 12pt;
+}
+
+.app-container {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
+header, 
+.actions, 
+.invoice-form, 
+.loading-overlay,
+#add-item, 
+.delete-item,
+input[type="file"],
+button:not(.print-only) {
+    display: none !important;
+}
+
+main {
+    display: block;
+    width: 100%;
+}
+
+.invoice-preview {
+    width: 100%;
+    box-shadow: none;
+    position: static;
+}
+
+.preview-wrapper {
+    padding: 0;
+    overflow: visible;
+    max-height: none;
+}
+
+.preview-content {
+    box-shadow: none;
+    padding: 0;
+    width: 100%;
+    min-height: auto;
+}
+
+/* Invoice Specific Print Styles */
+.invoice-header {
+    margin-bottom: 20pt;
+}
+
+.invoice-title {
+    font-size: 24pt;
+    font-weight: bold;
+    text-align: right;
+    margin-bottom: 10pt;
+}
+
+.company-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20pt;
+}
+
+.company-logo img {
+    max-height: 80pt;
+    max-width: 150pt;
+}
+
+.company-details {
+    text-align: right;
+}
+
+.invoice-info {
+    margin-bottom: 20pt;
+}
+
+.invoice-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5pt;
+}
+
+.client-info {
+    margin-bottom: 20pt;
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20pt;
+}
+
+.invoice-table th,
+.invoice-table td {
+    padding: 8pt;
+    text-align: left;
+    border-bottom: 1pt solid #ddd;
+}
+
+.invoice-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.amount-column {
+    text-align: right;
+}
+
+.invoice-totals {
+    width: 300pt;
+    margin-left: auto;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5pt 0;
+}
+
+.total-row.grand-total {
+    font-weight: bold;
+    font-size: 14pt;
+    border-top: 1pt solid #000;
+    padding-top: 8pt;
+    margin-top: 5pt;
+}
+
+.payment-info {
+    margin-top: 30pt;
+    padding-top: 10pt;
+    border-top: 1pt solid #ddd;
+}
+
+/* Page break control */
+.page-break {
+    page-break-before: always;
+}
+
+/* Ensure no page breaks inside critical elements */
+tr, 
+.company-info, 
+.invoice-info,
+.client-info,
+.total-row {
+    page-break-inside: avoid;
+}
+
+/* Footer positioning */
+.invoice-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+    padding: 10pt 0;
+}
