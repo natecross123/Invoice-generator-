@@ -1,3 +1,10 @@
+
+Made this for my photography business open to use for ayone needing  free invoice generator 
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -14,3 +21,6 @@ If you are developing a production application, we recommend using TypeScript wi
 
 
 npm run dev 
+
+
+Made this for my photography business open to use for ayone needing  free invoice generator 
