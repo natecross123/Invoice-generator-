@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Download, Edit, Printer } from 'lucide-react'
+import { Download, Edit, Printer, Save } from 'lucide-react'
 import { formatCurrency } from '../utils/formatters'
 import { formatDisplayDate } from '../utils/dateUtils'
 import { generatePDF } from '../utils/pdfGenerator'
@@ -7,14 +7,30 @@ import { generatePDF } from '../utils/pdfGenerator'
 const InvoicePreview = ({ data, onEdit }) => {
   const invoiceRef = useRef(null)
 
+  const isQuotation = data.docType === 'quotation'
+  const docLabel = isQuotation ? 'QUOTATION' : 'INVOICE'
+  const numLabel = isQuotation ? 'Quotation Number:' : 'Invoice Number:'
+  const dateLabel = isQuotation ? 'Quotation Date:' : 'Invoice Date:'
+  const endDateLabel = isQuotation ? 'Valid Until:' : 'Payment Due:'
+  const amountLabel = isQuotation ? 'Estimated Amount (JMD):' : 'Amount Due (JMD):'
+
   const handleDownloadPDF = async () => {
     if (invoiceRef.current) {
       await generatePDF(invoiceRef.current, data.invoiceNumber)
     }
   }
 
-  const handlePrint = () => {
-    window.print()
+  const handlePrint = () => window.print()
+
+  // Export the raw data as a JSON file so it can be re-imported later
+  const handleSaveFile = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${data.invoiceNumber}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -26,10 +42,18 @@ const InvoicePreview = ({ data, onEdit }) => {
           className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
         >
           <Edit size={16} className="mr-2" />
-          Edit Invoice
+          Edit
         </button>
-        
-        <div className="flex space-x-2">
+
+        <div className="flex gap-2">
+          <button
+            onClick={handleSaveFile}
+            className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
+            title="Save as .json file — re-import later to edit"
+          >
+            <Save size={16} className="mr-2" />
+            Save File
+          </button>
           <button
             onClick={handlePrint}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -37,18 +61,20 @@ const InvoicePreview = ({ data, onEdit }) => {
             <Printer size={16} className="mr-2" />
             Print
           </button>
-          <button
-            onClick={handleDownloadPDF}
-            className="btn-primary inline-flex items-center"
-          >
+          <button onClick={handleDownloadPDF} className="btn-primary inline-flex items-center">
             <Download size={16} className="mr-2" />
             Download PDF
           </button>
         </div>
       </div>
 
-      {/* Invoice Preview */}
-      <div 
+      {/* Tip */}
+      <p className="text-xs text-gray-500 print:hidden">
+        💡 Use <strong>Save File</strong> to export a <code>.json</code> you can re-import later to edit this document.
+      </p>
+
+      {/* Invoice / Quotation Document */}
+      <div
         ref={invoiceRef}
         className="bg-white shadow-lg mx-auto max-w-4xl print:shadow-none print:max-w-none"
         style={{ minHeight: '11in' }}
@@ -58,69 +84,49 @@ const InvoicePreview = ({ data, onEdit }) => {
           <div className="flex justify-between items-start mb-8">
             <div className="flex items-center space-x-4">
               {data.logo && (
-                <img
-                  src={data.logo}
-                  alt="Company Logo"
-                  className="h-16 w-auto"
-                />
+                <img src={data.logo} alt="Company Logo" className="h-16 w-auto" />
               )}
             </div>
             <div className="text-right">
-              <h1 className="text-3xl font-normal text-gray-900">INVOICE</h1>
+              <h1 className="text-3xl font-normal text-gray-900">{docLabel}</h1>
               {data.company.trn && (
                 <p className="text-sm text-gray-600">TRN - {data.company.trn}</p>
               )}
             </div>
           </div>
 
-          {/* Company and Invoice Info */}
+          {/* Company + Doc Info */}
           <div className="grid grid-cols-2 gap-8 mb-8">
-            {/* Company Info */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 {data.company.name}
                 {data.company.trn && (
-                  <span className="text-sm font-normal text-gray-600 block">
-                    TRN {data.company.trn}
-                  </span>
+                  <span className="text-sm font-normal text-gray-600 block">TRN {data.company.trn}</span>
                 )}
               </h2>
-              {data.company.address && (
-                <p className="text-sm text-gray-600 whitespace-pre-line mb-2">
-                  {data.company.address}
-                </p>
-              )}
-              {data.company.phone && (
-                <p className="text-sm text-gray-600">Phone: {data.company.phone}</p>
-              )}
-              {data.company.mobile && (
-                <p className="text-sm text-gray-600">Mobile: {data.company.mobile}</p>
-              )}
-              {data.company.email && (
-                <p className="text-sm text-gray-600">{data.company.email}</p>
-              )}
-              {data.company.website && (
-                <p className="text-sm text-gray-600">{data.company.website}</p>
-              )}
+              {data.company.address && <p className="text-sm text-gray-600 whitespace-pre-line mb-2">{data.company.address}</p>}
+              {data.company.phone && <p className="text-sm text-gray-600">Phone: {data.company.phone}</p>}
+              {data.company.mobile && <p className="text-sm text-gray-600">Mobile: {data.company.mobile}</p>}
+              {data.company.email && <p className="text-sm text-gray-600">{data.company.email}</p>}
+              {data.company.website && <p className="text-sm text-gray-600">{data.company.website}</p>}
             </div>
 
-            {/* Invoice Details */}
             <div className="text-right">
               <div className="space-y-2">
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Invoice Number:</span>
+                  <span className="text-sm font-medium text-gray-700">{numLabel}</span>
                   <span className="text-sm text-gray-900 ml-2">{data.invoiceNumber}</span>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Invoice Date:</span>
+                  <span className="text-sm font-medium text-gray-700">{dateLabel}</span>
                   <span className="text-sm text-gray-900 ml-2">{formatDisplayDate(data.invoiceDate)}</span>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Payment Due:</span>
+                  <span className="text-sm font-medium text-gray-700">{endDateLabel}</span>
                   <span className="text-sm text-gray-900 ml-2">{formatDisplayDate(data.dueDate)}</span>
                 </div>
                 <div className="pt-2 border-t">
-                  <span className="text-lg font-semibold text-gray-700">Amount Due (JMD):</span>
+                  <span className="text-lg font-semibold text-gray-700">{amountLabel}</span>
                   <span className="text-lg font-bold text-gray-900 ml-2">{formatCurrency(data.total)}</span>
                 </div>
               </div>
@@ -129,15 +135,15 @@ const InvoicePreview = ({ data, onEdit }) => {
 
           {/* Bill To */}
           <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">BILL TO</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              {isQuotation ? 'PREPARED FOR' : 'BILL TO'}
+            </h3>
             <div className="text-sm text-gray-900">
               <p className="font-medium">{data.client.name}</p>
               {data.client.contact && <p>{data.client.contact}</p>}
               {data.client.phone && <p>{data.client.phone}</p>}
               {data.client.email && <p>{data.client.email}</p>}
-              {data.client.address && (
-                <p className="whitespace-pre-line">{data.client.address}</p>
-              )}
+              {data.client.address && <p className="whitespace-pre-line">{data.client.address}</p>}
             </div>
           </div>
 
@@ -156,22 +162,12 @@ const InvoicePreview = ({ data, onEdit }) => {
                 {data.items.map((item) => (
                   <tr key={item.id}>
                     <td className="px-4 py-4">
-                      <div>
-                        {item.code && (
-                          <span className="text-sm font-medium text-gray-900">[{item.code}] </span>
-                        )}
-                        <span className="text-sm text-gray-900">{item.description}</span>
-                      </div>
+                      {item.code && <span className="text-sm font-medium text-gray-900">[{item.code}] </span>}
+                      <span className="text-sm text-gray-900">{item.description}</span>
                     </td>
-                    <td className="px-4 py-4 text-center text-sm text-gray-900">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-4 text-right text-sm text-gray-900">
-                      {formatCurrency(item.price)}
-                    </td>
-                    <td className="px-4 py-4 text-right text-sm text-gray-900">
-                      {formatCurrency(item.amount)}
-                    </td>
+                    <td className="px-4 py-4 text-center text-sm text-gray-900">{item.quantity}</td>
+                    <td className="px-4 py-4 text-right text-sm text-gray-900">{formatCurrency(item.price)}</td>
+                    <td className="px-4 py-4 text-right text-sm text-gray-900">{formatCurrency(item.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -202,7 +198,7 @@ const InvoicePreview = ({ data, onEdit }) => {
                 <span>{formatCurrency(data.total)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold">
-                <span>Amount Due (JMD):</span>
+                <span>{isQuotation ? 'Est. Amount (JMD):' : 'Amount Due (JMD):'}</span>
                 <span>{formatCurrency(data.total)}</span>
               </div>
             </div>
@@ -216,10 +212,11 @@ const InvoicePreview = ({ data, onEdit }) => {
                 <p className="text-sm text-gray-600 whitespace-pre-line">{data.notes}</p>
               </div>
             )}
-            
             {data.terms && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Notes / Terms</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                  {isQuotation ? 'Terms' : 'Notes / Terms'}
+                </h4>
                 <p className="text-sm text-gray-600 whitespace-pre-line">
                   {data.terms.replace('[Company Name]', data.company.name)}
                 </p>
@@ -230,7 +227,9 @@ const InvoicePreview = ({ data, onEdit }) => {
           {/* Footer */}
           <div className="mt-16 pt-8 border-t text-center">
             <p className="text-sm text-gray-500">
-              Thank you for choosing {data.company.name}!
+              {isQuotation
+                ? `Thank you for considering ${data.company.name}!`
+                : `Thank you for choosing ${data.company.name}!`}
               {data.company.website && ` ${data.company.website}`}
             </p>
           </div>
