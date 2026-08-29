@@ -18,13 +18,14 @@ const InvoiceForm = ({ initialData, onUpdate, onPreview }) => {
     defaultValues: buildDefaults(initialData, docType)
   })
 
-  // When initialData changes (e.g. imported file), reset the form
+  // When initialData changes (e.g. imported file), reset the form and sync docType
   useEffect(() => {
     if (initialData) {
-      setDocType(initialData.docType || 'invoice')
-      reset(buildDefaults(initialData, initialData.docType || 'invoice'))
+      const newDocType = initialData.docType || 'invoice'
+      setDocType(newDocType)
+      reset(buildDefaults(initialData, newDocType))
     }
-  }, [initialData?.invoiceNumber, initialData?.docType])
+  }, [initialData?.invoiceNumber, reset])
 
   // When docType changes, update the document number prefix
   useEffect(() => {
@@ -34,17 +35,18 @@ const InvoiceForm = ({ initialData, onUpdate, onPreview }) => {
       const suffix = currentNum.split('-').slice(1).join('-')
       setValue('invoiceNumber', `${isQuotation ? 'QUO' : 'INV'}-${suffix}`)
     }
-  }, [docType])
+  }, [docType, watch, setValue, isQuotation])
 
   const [items, setItems] = useState(initialData?.items || [])
   const [logo, setLogo] = useState(initialData?.logo || null)
 
   const watchedValues = watch()
 
+  // Update parent whenever form data changes
   useEffect(() => {
     const totals = calculateTotals(items, watchedValues.discount, watchedValues.tax)
     onUpdate({ ...watchedValues, docType, items, logo, ...totals })
-  }, [watchedValues, items, logo, docType])
+  }, [watchedValues, items, logo, docType, onUpdate])
 
   const onSubmit = (data) => {
     const totals = calculateTotals(items, data.discount, data.tax)
