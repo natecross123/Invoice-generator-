@@ -34,25 +34,90 @@ function App() {
   const handleFileImport = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    e.target.value = ''
+
+    const isPDF = file.type === 'application/pdf'
+    const isJSON = file.type === 'application/json' || file.name.endsWith('.json')
+
+    if (!isPDF && !isJSON) {
+      setImportError('Please upload a valid .json or .pdf file.')
+      e.target.value = ''
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
-        const data = JSON.parse(ev.target.result)
-        if (!data.invoiceNumber && !data.docType) {
-          setImportError('File does not appear to be a valid invoice/quotation file.')
-          return
+        if (isPDF) {
+          const fileName = file.name.replace('.pdf', '')
+          const data = {
+            docType: 'invoice',
+            invoiceNumber: `INV-${fileName}`,
+            invoiceDate: new Date().toISOString().split('T')[0],
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            company: {
+              name: '',
+              address: '',
+              phone: '',
+              mobile: '',
+              email: '',
+              website: '',
+              trn: '',
+            },
+            client: {
+              name: '',
+              contact: '',
+              phone: '',
+              email: '',
+              address: '',
+            },
+            items: [],
+            notes: `Imported from PDF: ${file.name}`,
+            terms: 'Payment methods:\n1. Cash\n2. Cheque payable to "[Company Name]"\n3. Direct deposit',
+            discount: 0,
+            tax: 0,
+          }
+          setInvoiceData(data)
+          saveToStorage('currentInvoice', data)
+          setActiveTab('form')
+          setImportError(null)
+        } else {
+          // JSON file
+          let data
+          try {
+            data = JSON.parse(ev.target.result)
+          } catch (parseError) {
+            setImportError('Invalid JSON file. Please ensure the file is valid JSON.')
+            e.target.value = ''
+            return
+          }
+
+          // Validate required fields
+          if (!data.invoiceNumber && !data.docType) {
+            setImportError('File does not appear to be a valid invoice. Missing required fields: invoiceNumber or docType.')
+            e.target.value = ''
+            return
+          }
+
+          setInvoiceData(data)
+          saveToStorage('currentInvoice', data)
+          setActiveTab('form')
+          setImportError(null)
         }
-        setInvoiceData(data)
-        saveToStorage('currentInvoice', data)
-        setActiveTab('form')
-        setImportError(null)
-      } catch {
-        setImportError('Could not read the file. Make sure it is a valid exported .json file.')
+      } catch (error) {
+        setImportError(`Error importing file: ${error.message}`)
       }
     }
-    reader.readAsText(file)
+
+    reader.onerror = () => {
+      setImportError('Failed to read the file. Please try again.')
+      e.target.value = ''
+    }
+
+    if (isPDF) {
+      reader.readAsArrayBuffer(file)
+    } else {
+      reader.readAsText(file)
+    }
   }
 
   const docType = invoiceData?.docType || 'invoice'
@@ -83,7 +148,7 @@ function App() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".json"
+                accept=".json,.pdf"
                 onChange={handleFileImport}
                 className="hidden"
               />
